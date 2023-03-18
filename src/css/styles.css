@@ -35,7 +35,6 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 30px;
-  max-width: 1140px;
 }
 
 .load-more {
@@ -44,6 +43,7 @@ body {
   margin-top: 16px;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 44px;
   padding: 8px;
   border-radius: 3px;
   background-color: blue;
