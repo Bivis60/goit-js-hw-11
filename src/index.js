@@ -21,6 +21,7 @@ function searchElements(event) {
 
   page = 1;
   refs.gallery.innerHTML = '';
+  refs.btnLoad.style.display = 'none';
   const queryEl = refs.input.value.trim();
 
   if (queryEl !== '') {
@@ -33,7 +34,8 @@ function searchElements(event) {
 }
 
 function loadMore() {
-  page = +1;
+  page += 1;
+  const queryEl = refs.input.value.trim();
   fetchElements(queryEl, page);
 }
 
@@ -48,89 +50,81 @@ async function fetchElements(queryEl, page) {
       orientation: 'horizontal',
       safesearch: 'true',
       page: page,
-      pre_page: 40,
+      per_page: 40,
     },
   };
+
   try {
-    const response = await axios.get(
-      URL, options
-    );
+    const response = await axios.get(URL, options);
     const quntity = response.data.totalHits;
-    console.log(response.data);
-    Notify.success(`Hooray! We found ${quntity} images.`);
+    const result = response.data;
+    const length = response.data.hits.length;
+
+    messages(length, quntity);
+    createGallery(result);
+
   } catch (error) {
-    Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
+    console.log(error);
   }
 }
 
-// refs.btnLoad.style.display = 'block';
+function createGallery(elements) {
+  const marcup = elements.hits
+    .map(
+      ({
+        webformatURL,
+        largeImageURL,
+        tags,
+        likes,
+        views,
+        comments,
+        downloads,
+      }) => `<a class="card-link" href="${largeImageURL}">
+                <div class="photo-card">
+                  <img src="${webformatURL}" alt="${tags}" width = 240 loading="lazy" />
+                    <div class="info">
+                      <p class="info-item">
+                        <b>Likes</b> ${likes}
+                      </p>
+                      <p class="info-item">
+                        <b>Views</b> ${views}
+                      </p>
+                      <p class="info-item">
+                        <b>Comments</b> ${comments}
+                      </p>
+                      <p class="info-item">
+                        <b>Downloads</b> 
+                        ${downloads}
+                      </p>
+                    </div>
+                </div>
+              </a>`
+    )
+    .join('');
+  refs.gallery.insertAdjacentHTML('beforeend', marcup);
+  galleryElement.refresh();
+}
 
-// const fetchElement = async () => {
-//   const API_KEY = '34475511-5e81bdf830d449013fbfa8a58';
-//   const URL = 'https://pixabay.com/api/';
+let galleryElement = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
 
-//   const response = await fetch(
-//     `'${URL}?key=${API_KEY}&q=${queryEl}&image_type=photo&orientation=horizontal&safesearch=true&page=${pageNum}&pre_page=40'`
-//   );
-//   if (!response.ok) {
-//     throw new Error(response.status);
-//   }
-//   return await response.json();
-// };
-
-/* <div class="photo-card">
-  <img src="" alt="" loading="lazy" />
-  <div class="info">
-    <p class="info-item">
-      <b>Likes</b>
-    </p>
-    <p class="info-item">
-      <b>Views</b>
-    </p>
-    <p class="info-item">
-      <b>Comments</b>
-    </p>
-    <p class="info-item">
-      <b>Downloads</b>
-    </p>
-  </div>
-</div> */
-
-// "Hooray! We found totalHits images."
-
-// "Sorry, there are no images matching your search query. Please try again."
-
-// "We're sorry, but you've reached the end of search results."
-
-/* const { height: cardHeight } = document
-  .querySelector(".gallery")
-  .firstElementChild.getBoundingClientRect();
-
-window.scrollBy({
-  top: cardHeight * 2,
-  behavior: "smooth",
-}); */
-
-// key - твій унікальний ключ доступу до API.
-// q - термін для пошуку. Те, що буде вводити користувач.
-// image_type - тип зображення. На потрібні тільки фотографії, тому постав значення photo.
-// orientation - орієнтація фотографії. Постав значення horizontal.
-// safesearch - фільтр за віком. Постав значення true.
-
-// webformatURL - посилання на маленьке зображення для списку карток.
-// largeImageURL - посилання на велике зображення.
-// tags - рядок з описом зображення. Підійде для атрибуту alt.
-// likes - кількість лайків.
-// views - кількість переглядів.
-// comments - кількість коментарів.
-// downloads - кількість завантажень.
-
-// Notiflix.Notify.success('Sol lucet omnibus');
-
-// Notiflix.Notify.failure('Qui timide rogat docet negare');
-
-// Notiflix.Notify.warning('Memento te hominem esse');
-
-// Notiflix.Notify.info('Cogito ergo sum');
+function messages(length, quntity) {
+  if (length === 0) {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+    return;
+  }
+  if (page === 1) {
+    refs.btnLoad.style.display = 'flex';
+    Notify.success(`Hooray! We found ${quntity} images.`);
+  }
+  if (length < 40) {
+    refs.btnLoad.style.display = 'none';
+    Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+  }
+}
