@@ -118,7 +118,7 @@ function messages(length, quntity) {
     return;
   }
   if (page === 1) {
-    refs.btnLoad.style.display = 'flex';
+    refs.btnLoad.style.display = 'block';
     Notify.success(`Hooray! We found ${quntity} images.`);
   }
   if (length < 40) {
